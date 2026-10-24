@@ -84,8 +84,8 @@ python scripts/check_streamlit_app.py <your-app>.streamlit.app
 ```
 
 ## Deployed links
-- **GitHub repository:** <ADD_LINK_HERE>
-- **Streamlit Community Cloud app:** <ADD_LINK_HERE>
+- **GitHub repository:** https://github.com/kshriks/tourism-wellness
+- **Streamlit Community Cloud app:** https://tourism-wellness-zsdu4c9x7oish5fkkkz2rn.streamlit.app/
 
 ## Model summary
 See `model/metrics_summary.csv` for the full comparison; the pipeline
