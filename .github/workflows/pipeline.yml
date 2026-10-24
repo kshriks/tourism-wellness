@@ -1,0 +1,107 @@
+name: Wellness Tourism Package MLOps Pipeline
+
+# Runs end-to-end on every push to main that touches the data or pipeline
+# code, and can also be triggered manually from the Actions tab.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/tourism.csv"
+      - "scripts/**"
+      - "app.py"
+      - "requirements.txt"
+      - ".github/workflows/pipeline.yml"
+  workflow_dispatch: {}
+
+jobs:
+  data-registration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate and register dataset
+        run: python scripts/data_validation.py
+
+  data-preparation:
+    needs: data-registration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Clean data and create train/test split
+        run: python scripts/data_prep.py
+
+      - name: Upload train/test split as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-test-data
+          path: |
+            data/train.csv
+            data/test.csv
+
+  model-training:
+    needs: data-preparation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download train/test split artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: train-test-data
+          path: data
+
+      - name: Tune candidate models, track experiments, select and save the best model
+        run: python scripts/train.py
+
+      - name: Upload trained model + metrics as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: |
+            model/best_model.joblib
+            model/metrics_summary.csv
+            model/best_model_info.json
+
+      - name: Commit best model back to the repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add model/best_model.joblib model/metrics_summary.csv model/best_model_info.json
+          git diff --cached --quiet && echo "No model changes to commit" || \
+            (git commit -m "ci: update trained model [skip ci]" && git push)
+
+  # Deployment note:
+  # The Streamlit app (app.py) is deployed on Streamlit Community Cloud,
+  # which is connected directly to this GitHub repository's main branch.
+  # Streamlit Cloud automatically redeploys the app whenever main is
+  # updated (including the "ci: update trained model" commit above), so no
+  # separate deploy job/credentials are needed in this workflow — pushing
+  # the retrained model to main is what triggers the redeploy.

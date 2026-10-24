@@ -1,0 +1,4 @@
+{
+  "best_model": "XGBoost",
+  "test_recall": 0.8064516129032258
+}
