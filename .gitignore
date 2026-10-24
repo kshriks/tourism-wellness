@@ -3,5 +3,3 @@ mlruns/
 __pycache__/
 *.pyc
 .pytest_cache/
-data/train.csv
-data/test.csv
