@@ -1,4 +1,4 @@
 {
-  "best_model": "RandomForest",
-  "test_recall": 0.8387096774193549
+  "best_model": "XGBoost",
+  "test_recall": 0.8193548387096774
 }
