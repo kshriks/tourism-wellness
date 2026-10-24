@@ -12,7 +12,8 @@ on:
       - "requirements.txt"
       - ".github/workflows/pipeline.yml"
   workflow_dispatch: {}
-
+permissions:
+  contents: write
 jobs:
   data-registration:
     runs-on: ubuntu-latest
